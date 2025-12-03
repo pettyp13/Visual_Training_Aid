@@ -19,7 +19,7 @@
             {
                 "type": "System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
                 "key": "buildOutputDirList",
-                "value": "{\"m_Value\":\"E:/Unity/Visual training aid/WebGL;E:/Unity/Visual training aid/WebGL Builds;;;;;;;;\"}"
+                "value": "{\"m_Value\":\"E:/Unity/Visual_Training_Aid/WebGL;E:/Unity/Visual training aid/WebGL;E:/Unity/Visual training aid/WebGL Builds;;;;;;;\"}"
             }
         ]
     }

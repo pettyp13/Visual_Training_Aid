@@ -7,7 +7,7 @@ public class SphereController : MonoBehaviour
     public bool isTarget = false;
     public float speed = 1f;
     public Vector3 velocity;
-    public Vector3 bounds = new Vector3(5f, 5f, 5f);
+    public Vector3 bounds = new Vector3(2f, 2f, 2f);
 
     Renderer rend;
     Color baseColor;

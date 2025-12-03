@@ -1,6 +1,4 @@
-﻿
-
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -12,6 +10,7 @@ public class GameManager : MonoBehaviour
     public Transform trialArea;
     public GameObject spherePrefab;
     public TMP_Text infoText;
+    public TMP_Text titleText;   // ✅ Add this for your "Visual Training Aid" title
     public Button startButton;
 
     AdaptiveDifficulty adaptive;
@@ -19,12 +18,21 @@ public class GameManager : MonoBehaviour
     List<int> currentTrueTargets;
     List<int> playerSelections = new List<int>();
 
+    bool playerHasConfirmed = false;
+    bool trialDone = false;
+
+    // ✅ Score tracking variables
+    int totalTrials = 10;
+    int currentTrial = 0;
+    int correctCount = 0;
+    int incorrectCount = 0;
+
     void Start()
     {
-        // initial difficulty
+        // Initial difficulty
         adaptive = new AdaptiveDifficulty(startSpeed: 1.2f, nObjects: 8, nTargets: 4);
 
-        // wire up trial controller
+        // Wire up trial controller
         trialController.spherePrefab = spherePrefab;
         trialController.trialArea = trialArea;
         trialController.OnTrialEndSelectionPhase += OnSelectionPhaseStart;
@@ -32,77 +40,94 @@ public class GameManager : MonoBehaviour
 
         startButton.onClick.AddListener(OnStartClicked);
         infoText.text = "Press Start to begin.";
+
+        // ✅ Show title at startup
+        if (titleText != null)
+            titleText.gameObject.SetActive(true);
     }
 
     void OnStartClicked()
     {
+        // ✅ Hide the title once game starts
+        if (titleText != null)
+            titleText.gameObject.SetActive(false);
+
+        // ✅ Reset score for a new session
+        correctCount = 0;
+        incorrectCount = 0;
+        currentTrial = 0;
+
         startButton.interactable = false;
-        StartCoroutine(RunSessionCoroutine());
+        infoText.text = "Starting new session...";
+        StartCoroutine(SessionRoutine());
     }
 
-    IEnumerator RunSessionCoroutine()
+    IEnumerator SessionRoutine()
     {
-        int trials = 10;
-        for (int i = 0; i < trials; i++)
+        for (currentTrial = 0; currentTrial < totalTrials; currentTrial++)
         {
-            // setup trial from adaptive
+            // Reset round flags
+            playerHasConfirmed = false;
+            trialDone = false;
+
+            // Setup trial
             trialController.Setup(adaptive.currentNObjects, adaptive.currentNTargets, adaptive.currentSpeed, new Vector3(5, 5, 5));
             trialController.BuildSpheres();
-            infoText.text = $"Trial {i + 1}/{trials}\nWatch the highlighted targets.";
-            yield return new WaitForSeconds(1f);
 
-            // Subscribe to capture true targets on selection phase
-            bool selectionPhaseCompleted = false;
-            currentTrueTargets = null;
+            infoText.text = $"Trial {currentTrial + 1}/{totalTrials}\nScore: {correctCount}/{totalTrials}\nWatch the highlighted targets.";
+            yield return new WaitForSeconds(1.5f);
 
-            trialController.OnTrialEndSelectionPhase += (List<int> trueTargets) =>
-            {
-                currentTrueTargets = trueTargets;
-                selectionPhaseCompleted = true;
-            };
-
+            // Start the trial
             trialController.StartTrial();
 
-            // Wait until trialController signals selection-phase start
-            while (!selectionPhaseCompleted) yield return null;
+            // Wait for selection phase
+            while (currentTrueTargets == null)
+                yield return null;
 
-            // Now allow player to click spheres — we will collect selections for a fixed time or until count reached
+            // Let player select
             playerSelections.Clear();
-            infoText.text = "Select the targets you tracked. Press Space to confirm when done.";
-            // Wait for the user to click Confirm (we will implement simple confirmation via spacebar)
-            bool confirmed = false;
-            System.Action confirmAction = () => confirmed = true;
-            // simple instruction: user presses space to confirm
-            while (!confirmed)
+            infoText.text = $"Trial {currentTrial + 1}/{totalTrials}\nScore: {correctCount}/{totalTrials}\nSelect the targets you tracked. Press SPACE to confirm.";
+
+            while (!playerHasConfirmed)
             {
                 HandleMouseSelection();
-                if (Input.GetKeyDown(KeyCode.Space)) confirmed = true;
+                if (Input.GetKeyDown(KeyCode.Space))
+                    playerHasConfirmed = true;
                 yield return null;
             }
 
             // Evaluate
             trialController.EvaluateSelection(playerSelections, currentTrueTargets);
 
-            // Wait for trial complete event to fire and update adaptive; OnTrialComplete will set adaptive
-            bool trialDone = false;
-            System.Action<bool> doneAction = (bool success) => trialDone = true;
-            trialController.OnTrialComplete += doneAction;
+            // Wait for trial to complete (OnTrialComplete event sets trialDone)
+            while (!trialDone)
+                yield return null;
 
-            while (!trialDone) yield return null;
+            // Pause before next round
+            yield return new WaitForSeconds(2f);
 
-            // Small pause between trials
-            yield return new WaitForSeconds(1f);
+            // Reset for next round
+            currentTrueTargets = null;
         }
 
-        infoText.text = "Session complete.";
+        // ✅ After all trials, show session summary
+        float accuracy = (float)correctCount / totalTrials * 100f;
+        infoText.text = $" Session Complete!\n" +
+                        $"Correct: {correctCount}\n" +
+                        $"Incorrect: {incorrectCount}\n" +
+                        $"Accuracy: {accuracy:F1}%\n\n" +
+                        $"Click Start to try again!";
+
+        // ✅ Show title again after finishing
+        if (titleText != null)
+            titleText.gameObject.SetActive(true);
+
         startButton.interactable = true;
     }
 
     void OnSelectionPhaseStart(List<int> trueTargets)
     {
-        // store the true target ids for evaluation
         currentTrueTargets = trueTargets;
-        // clear previous player selections
         playerSelections.Clear();
     }
 
@@ -119,8 +144,7 @@ public class GameManager : MonoBehaviour
                     if (!playerSelections.Contains(sc.id))
                     {
                         playerSelections.Add(sc.id);
-                        // visual feedback
-                        sc.MarkSelected(true);
+                        sc.MarkSelected(true); // Give feedback
                     }
                 }
             }
@@ -129,7 +153,18 @@ public class GameManager : MonoBehaviour
 
     void OnTrialComplete(bool success)
     {
-        infoText.text = success ? "Correct! Difficulty increased." : "Incorrect. Difficulty decreased.";
+        if (success)
+        {
+            correctCount++;
+            infoText.text = $" Correct! Difficulty increased.\nScore: {correctCount}/{totalTrials}";
+        }
+        else
+        {
+            incorrectCount++;
+            infoText.text = $" Incorrect. Difficulty decreased.\nScore: {correctCount}/{totalTrials}";
+        }
+
         adaptive.UpdateDifficulty(success);
+        trialDone = true;
     }
 }

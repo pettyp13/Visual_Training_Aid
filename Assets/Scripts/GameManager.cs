@@ -10,8 +10,9 @@ public class GameManager : MonoBehaviour
     public Transform trialArea;
     public GameObject spherePrefab;
     public TMP_Text infoText;
-    public TMP_Text titleText;   // ✅ Add this for your "Visual Training Aid" title
+    public TMP_Text titleText;   //  Add this for your "Visual Training Aid" title
     public Button startButton;
+    
 
     AdaptiveDifficulty adaptive;
 
@@ -21,7 +22,7 @@ public class GameManager : MonoBehaviour
     bool playerHasConfirmed = false;
     bool trialDone = false;
 
-    // ✅ Score tracking variables
+    //  Score tracking variables
     int totalTrials = 10;
     int currentTrial = 0;
     int correctCount = 0;
@@ -41,18 +42,18 @@ public class GameManager : MonoBehaviour
         startButton.onClick.AddListener(OnStartClicked);
         infoText.text = "Press Start to begin.";
 
-        // ✅ Show title at startup
+        //  Show title at startup
         if (titleText != null)
             titleText.gameObject.SetActive(true);
     }
 
     void OnStartClicked()
     {
-        // ✅ Hide the title once game starts
+        //  Hide the title once game starts
         if (titleText != null)
             titleText.gameObject.SetActive(false);
 
-        // ✅ Reset score for a new session
+        //  Reset score for a new session
         correctCount = 0;
         incorrectCount = 0;
         currentTrial = 0;
@@ -110,7 +111,7 @@ public class GameManager : MonoBehaviour
             currentTrueTargets = null;
         }
 
-        // ✅ After all trials, show session summary
+        //  After all trials, show session summary
         float accuracy = (float)correctCount / totalTrials * 100f;
         infoText.text = $" Session Complete!\n" +
                         $"Correct: {correctCount}\n" +
@@ -118,7 +119,7 @@ public class GameManager : MonoBehaviour
                         $"Accuracy: {accuracy:F1}%\n\n" +
                         $"Click Start to try again!";
 
-        // ✅ Show title again after finishing
+        //  Show title again after finishing
         if (titleText != null)
             titleText.gameObject.SetActive(true);
 

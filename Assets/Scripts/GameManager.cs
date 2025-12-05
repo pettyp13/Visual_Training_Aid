@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;   // ⬅ NEW
 
 public class GameManager : MonoBehaviour
 {
@@ -10,9 +11,9 @@ public class GameManager : MonoBehaviour
     public Transform trialArea;
     public GameObject spherePrefab;
     public TMP_Text infoText;
-    public TMP_Text titleText;   //  Add this for your "Visual Training Aid" title
+    public TMP_Text titleText;   //  Your "Visual Training Aid" title
     public Button startButton;
-    
+    public Button highScoreButton;   // ⬅ NEW: button to open High Score screen
 
     AdaptiveDifficulty adaptive;
 
@@ -40,6 +41,13 @@ public class GameManager : MonoBehaviour
         trialController.OnTrialComplete += OnTrialComplete;
 
         startButton.onClick.AddListener(OnStartClicked);
+
+        // ⬇ NEW: wire High Score button if assigned
+        if (highScoreButton != null)
+        {
+            highScoreButton.onClick.AddListener(OpenHighScoreScreen);
+        }
+
         infoText.text = "Press Start to begin.";
 
         //  Show title at startup
@@ -119,6 +127,22 @@ public class GameManager : MonoBehaviour
                         $"Accuracy: {accuracy:F1}%\n\n" +
                         $"Click Start to try again!";
 
+        // --- SAVE SCORES TO PLAYERPREFS (for High Score screen) --- //
+        PlayerPrefs.SetFloat("LastAccuracy", accuracy);  // last session
+
+        float previousHigh = PlayerPrefs.GetFloat("HighScoreAccuracy", 0f);
+        if (accuracy > previousHigh)
+        {
+            PlayerPrefs.SetFloat("HighScoreAccuracy", accuracy);  // new high score
+            PlayerPrefs.Save();
+            infoText.text += "\n\nNEW HIGH SCORE!";
+        }
+        else
+        {
+            PlayerPrefs.Save();
+        }
+        // ---------------------------------------------------------- //
+
         //  Show title again after finishing
         if (titleText != null)
             titleText.gameObject.SetActive(true);
@@ -167,5 +191,11 @@ public class GameManager : MonoBehaviour
 
         adaptive.UpdateDifficulty(success);
         trialDone = true;
+    }
+
+    // ⬇ NEW: called by the High Score button
+    public void OpenHighScoreScreen()
+    {
+        SceneManager.LoadScene("HighScoreScene");   // make sure you create a scene with this name
     }
 }

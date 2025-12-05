@@ -1,3 +1,5 @@
+#if UNITY_EDITOR
+
 using NUnit.Framework;
 using UnityEngine;
 
@@ -91,3 +93,5 @@ public class PlayModeTests
         Assert.IsTrue(result);
     }
 }
+
+#endif   // <-- ADD THIS LINE

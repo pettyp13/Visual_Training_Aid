@@ -1137,8 +1137,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Objective: \nlocate the highlighted orbs in the begging of the round and
-    track them until movement stops \n \nPress Button to Start"
+  m_text: "Objective: \nlocate the highlighted orbs in the beginning of the round
+    and track them until movement stops \n \nPress Button to Start"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
